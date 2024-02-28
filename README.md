@@ -574,7 +574,6 @@ Sets Nextion Variable to `var`.
 The varName MUST exist.
 
  NOTE that, if appropriate, the ".val" varName suffix MUST be sent. Program.S variables DO NOT need the ".val" suffix whereas Nextion Display variables do.
-
 ```
 	display.setNumVarValue("sys0",1000000);
 	display.setNumVarValue("va0.val",12345);
