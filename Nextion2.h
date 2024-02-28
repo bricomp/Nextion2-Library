@@ -407,13 +407,13 @@ enum setVarAttributeEnum {		invalidtype = 0,
 };
 
 /********************************************************************************************************
-*																								*
-*		This is an explanation of the data returned from the Nextion.							*
-*		I think it's self explanatory, but then I wrote it!!					                *
-*		There is the Id returned by the Nextion, followed by the number of following bytes,		*
-*		followed by an expanation of those bytes. It is only because we have this				*
-*		information that this library was able to be written. All is based upon this info.		*
-*																								*
+*																										*
+*		This is an explanation of the data returned from the Nextion.									*
+*		I think it's self explanatory, but then I wrote it!!											*
+*		There is the Id returned by the Nextion, followed by the number of following bytes,				*
+*		followed by an expanation of those bytes. It is only because we have this						*
+*		information that this library was able to be written. All is based upon this info.				*
+*																										*
 *********************************************************************************************************/
 
 /*											      /-------- 	Id Codes Returned by Nextion
@@ -448,12 +448,12 @@ const uint8_t	transparentDataReady	= 0xFE;	//	3		0xFE 0xFF 0xFF 0xFF								Retu
 												//															to begin receiving the specified quantity of data(see 1.16)
 
 /********************************************************************************************************
-*																								*
-*		Below are the error codes returned by the Nextion            							*
-*		Whether they are returned or not depends upon the value by the Nextion bkcmd.			*
-*		This can be set to Level 0 ... to Level 3. Below are shown the bkcmd level at which 	*
-*       the error/state message is returned. The default is Level 2.							*
-*																								*
+*																										*
+*		Below are the error codes returned by the Nextion            									*
+*		Whether they are returned or not depends upon the value by the Nextion bkcmd.					*
+*		This can be set to Level 0 ... to Level 3. Below are shown the bkcmd level at which 			*
+*       the error/state message is returned. The default is Level 2.									*
+*																										*
 *********************************************************************************************************/
 
 /* Error/event codes (ONLY 0x01 is an event code)
@@ -1126,7 +1126,7 @@ class Nextion2 {
 *		click(uint8_t page, const char* objectToClick, bool touch)									*
 *---------------------------------------------------------------------------------------------------*
 *		Two options, the first assumes that the Nextion is on the page where the item to be			*
-*		clicked is located, trhe second version will actually change to the page given				*
+*		clicked is located, the second version will actually change to the page given				*
 *		before execuring the click function.														*
 *---------------------------------------------------------------------------------------------------*
 *       Usage: click("MyFavouriteHotspot", true ) sends click MyFavouriteHotSpot,1					*
