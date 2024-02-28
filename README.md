@@ -1,18 +1,16 @@
-# Nextion-Library
+# Nextion2-Library
 
-**NOTE This ReadMe is for the initial version (1.72) of the Nextion Library. It is only here as a place holder for the new ReadMe which has yet to be written. Please See the Nextion.h file for a description of the new library.**
+**NOTE This Release is an update from vs 1.72 in Nextion.h rather than this release in Nextion2.h.**
 
-**NOTE that the version has been raised to vs 1.71. This includes an important fix which overcomes the library being overwhelmed  when data arrives too fast from the Nextion, as is the case when two variables data is sent in close succession ands at high baud rates. The fault resulted in the second variables data being lost and an error occurring.**
-
-Other enhancements have been made to the library, described in the Nextion.h file, and in README-Addendum.md (yet to be published).
+Other enhancements have been made to the library, described in the Nextion2.h file.
 
 
 
-#### PLEASE ALSO READ THE Nextion.h DOCUMENT IN Resources
+#### PLEASE ALSO READ THE Nextion2.h DOCUMENT IN Resources
 
 In the Examples folder is the HMI file NextionExample.HMI and the INO file NextionExample.ino which were developed to demonstrate this library.
 
-This ReadMe is a little wordy but tries to explain all the nuances of using Nextion. For a more concise explanation see the Nextion.h file or the information in resources.
+This ReadMe is a little wordy but tries to explain all the nuances of using Nextion. For a more concise explanation see the Nextion2.h file or the information in resources.
 
 Use this code as a framework to produce your own Nextion Library.
 See Resources for Printable Word/pdf documents.
@@ -59,9 +57,9 @@ Below is the Nextion code snippet to set the RTC time.
 				  SetTime=0
 				}
 
-To include the Nextion Library simply `#include "Nextion.h"`at the head of your program.
+To include the Nextion Library simply `#include "Nextion2.h"`at the head of your program.
 
-To create an instance of the code use  `Nextion display(&NextionDisplay);`
+To create an instance of the code use  `Nextion2 display(&NextionDisplay);`
 
 where NextionDisplay is the serial stream used, i.e. Serial1, Serial2, etc.
 
@@ -120,6 +118,7 @@ A suitable startup for your program could be as below:-
 		NextionDisplay.end();
 		delay(100);
 		NextionDisplay.begin(baud);
+		NextionDisplay.clear();
 	}
 	
 	void setup() {
@@ -372,7 +371,7 @@ It should be noted that the main loop should look something like below:-
 
 #### Nextion Return Format
 
-When the Nextion sends data to the Teensy it first sends an identification character followed by a number of characters, dependant upon the type of data being returned. This is decoded by `display.respondToReply`. These id's and their response is listed in the Nextion.h file and also in .\Resources\Nextion.h\A4 Landscape.pdf or .docx. The latter two documents are provided so that they can be printed out for viewing purposes.
+When the Nextion sends data to the Teensy or any other MCU it first sends an identification character followed by a number of characters, dependant upon the type of data being returned. This is decoded by `display.respondToReply`. These id's and their response is listed in the 2 file and also in .\Resources\Nextion2.h\A4 Landscape.pdf or .docx. The latter two documents are provided so that they can be printed out for viewing purposes.
 
 If you scroll down to the 5th page you will see listed all the Nextion return id values followed by the number of bytes/chars returned after the id, and an explanation of the format of the returned data.
 
@@ -430,7 +429,7 @@ min 0, max 3, default 2
 – Level 2 is OnFailure, only when last serial command failed (default)
 – Level 3 is Always, returns 0x00 to 0x23 result of serial command.
 
-Result is only sent after serial command/task has been completed, as such this provides an invaluable status for debugging and branching. See table on Page 6 of Nextion.h.A4 Landscape.docx or .pdf.
+Result is only sent after serial command/task has been completed, as such this provides an invaluable status for debugging and branching. See table on Page 6 of Nextion2.h.A4 Landscape.docx or .pdf.
 
 Nextion Return Data is not subject to bkcmd, i.e. if a command normally returns data, the return of the data is the "handshake" function.
 
@@ -443,6 +442,12 @@ The current state of bkcmd can be determined by examining `display.bkcmd`.
 ###### void gotoPage(uint32_t which);
 
 Sets which as active displayed page.
+
+
+
+###### int32_t getPage();
+
+Gets the active displayed page.
 
 
 
@@ -467,13 +472,23 @@ The process of setting bkcmd to 1 or 3 is as below:
 
 
 
-###### int32_t getNumVarValue(const char* varName);
+###### `int32_t getVariableValue(const char* varName);`
 
-###### int32_t getNumVarValue(const char* varName, const char* suffixName);
+###### `int32_t getVariableValue(const char* varName, varAttributeEnum attributeId);`
 
-In the first case gets the value of Nextion Variable `varName`.
+In the first case gets the value of Nextion Variable `varName`. This MUST be a global variable which do NOT have attributes, as in sys0, sys1, etc.
 
-In the second case returns the value of a variable suffix as in: `getNumVarValue( "x0","ws1")` to get the number of dp for a Nextion float variable.  NOTE that the "." in "x0.ws1" is provided by the function.
+In the second case returns the value of a variable attribute as in: `getVariableValue( "x0", ws1 )` to get the number of dp for a Nextion float variable.  NOTE that the ".ws1" in "x0.ws1" is provided by the function.
+
+Another usage might be to get the component id of a button, in which case we would use:-
+
+`uint32_t buttonId = display.getVariableValue( "b0", id )`;
+
+The attribute names are contained in `varAttributeEnum` and with a few exceptions are the same as used by the Nextion documentation. 
+
+The exceptions are `getX` for x, `getY` for y, `getW` for w and `getH` for h. 
+
+It was decided to make these changes so that x,y,w,h would not clash with variables of those names in your code.
 
 In both cases the function waits for up to 1000ms for a reply. If no reply returns -1.
 
@@ -488,11 +503,11 @@ The varName MUST exist.
 ```
 int32 sys0Value, va0Value;
 
-sys0value = display.getNumVarValue("sys0");
+sys0value = display.getVariableValue("sys0");
 if (sys0value==-1){    // should/could also check display.nextionError
 	Serial.println("Unable to get value of sys0");
 }
-va0Value = display.getNumVarValue("va0","val");  // returns value of "va0.val"
+va0Value = display.getNumVarValue("va0", val);  // returns value of "va0.val"
 ```
 
 
@@ -569,18 +584,81 @@ Returns `true` if string returned successfully. `stringWaiting` is also set to t
 
 
 
-###### bool setNumVarValue(const char* varName, int32_t var);
+###### bool setVariableValue( const char* varName, int32_t var);
 
-Sets Nextion Variable to `var`.	
+###### bool setVariableValue( const char* varName, setVarAttributeEnum setAttributeId, int32_t var);
 
-The varName MUST exist.
+###### bool setVariableValue( const char* varName, const char* var, bool terminateText = true );
 
- NOTE that, if appropriate, the ".val" varName suffix MUST be sent. Program.S variables DO NOT need the ".val" suffix whereas Nextion Display variables do.
+This command class exists is three forms show above.
+
+The **first** is used to set a Global variable value such as sys0. 
+
+Program.S variables DO NOT need the `val` attribute whereas Nextion Display variables do.
+
+
+
+The **second** is used to set a Variable's attribute (the attribute could be `var` to set the Variable value).
+
+The list of attributes can be seen in `setVarAttributeEnum` . 
+
+The list of names is the same as for `varAttributeEnum`, except that they are prefixed with set and the first character of the `varAttributeEnum` attribute name is capitalised. i.e. `drag` becomes `setDrag`.
+
+`x` and `y` become `setX` and `getY`.
+
+Unlike the `getVariableValue` attributes, not all of them can be set. Some of them are READ ONLY.
+
+Those that are READ ONLY are prefixed with invalid as in `invalidvscope`.
+
+
+
+The **third** version is used to send text to a Nextion variable.
+
+There is no need to give the `txt` attribute as it can only be txt. The library automatically adds the `.txt`.
+
+The third parameter,  `bool terminateText = true`, is used to indicate whether the text should be terminated with a **"**.
+
+It may be you want to append a number or more text to that to be sent to the Nextion. 
+
+If that is the case then set the value to false and use `display.sendNumberAsText` or `display.sendText` (described below) to append the number or text.
+
+In all three cases the varName MUST exist. Examples of usage below:-
+
 ```
-	display.setNumVarValue("sys0",1000000);
-	display.setNumVarValue("va0.val",12345);
-	display.setNumVarValue("bt0.x",35);  // Puts Dual-state button bt0 at x=35
+	display.setVariableValue("sys0",1000000);
+	
+	display.setVariableValue("bt0", setX, ,35);  // Puts Dual-state button bt0 at x=35
+	display.setVariableValue("va0", setVal, 12345);
+	
+	display.setVariableValue("CommentBox", "This is a comment");
+	display.setVariableValue("CommentBox", "This is comment ", false);
+	display.sendNumberAsText( num, false );
+	display.sendText( ".");
 ```
+
+
+
+
+
+###### bool sendText(const char* txt, bool terminate = true );
+
+###### bool sendNumberAsText(uint32_t num, bool terminate = true );
+
+`sendNumberAsText(uint32_t num, bool terminate = true )` is a new command and just echoes the number to the Nextion.
+
+It has the option to terminate  the Text stream with a " or not. You might want to append something else to the text string after the number.
+
+`sendText(const char* txt, bool terminate = true )` complements `sendNumberAsText` and operates in the same way but with text rather than a number.
+
+
+
+###### bool setGlobalVariableValue( uint8_t p, uint8_t b, setVarAttributeEnum setAttributeId, int32_t var);
+
+###### bool setGlobalVariableValue( uint8_t p, uint8_t b, const char* var, bool terminateText = true);
+
+###### bool setGlobalVariableValue( uint8_t p, uint8_t b, int32_t var);
+
+The above three functions work the same as `setVariableValue` described above, except the variable name is replaced with its global identifiers **p** and **b** as in `p[2].b[33].val=2467`.
 
 
 
@@ -598,17 +676,6 @@ if (display.setNumVarFloat( "x0", 1234.5678, 2, true ) {....//	displays 1234.57 
 
 if (display.setNumVarFloat( "x0", 1234.5678, 2, false ) {....//	displays 1234.56 in x0.	 
 ```
-
-
-
-###### bool setStrVarValue(const char* varName, const char* var);
-
-Sets String Variable to var.
-
-NOTE that there is no need to send the variable suffix ".txt". 
-
-`setStrVarValue("va0","this is a string")` will send: `va0.txt="this is a string"FFFFFF` to the Nextion.
-The varName MUST exist.
 
 
 
@@ -699,9 +766,43 @@ display.sendCommand("sys0=",sys0Val);
 
 
 
-### Commands which require specific settings on Nextion.
+###### bool getEEPromData(uint32_t start, uint8_t len);
 
-#### Time Functions
+Gets the EEProm data from **start** for **len** bytes.
+Waits for up to 1000ms for a reply. If no reply returns false.
+
+The wait time is controlled by the variable `getEPromDataTimeout` which is initially set to 1000 ms.
+
+In reality this command should only be sent when the Nextion Serial buffer is empty, otherwise any reply may be from previously stacked up Nextion commands and therefore be erroneous.
+
+The result is placed in the `EEPromDataBuffer` setup with the `setEEPromDataBuffer` fn, returning true if len bytes collected. 
+
+The number of bytes collected is also placed in the global variable `eepromBytesRead`.
+
+A valid `getEpromData` fn call also sets `eepromDataChanged` to false.
+
+Initially it is set to true to force initial collection of Nextion eeprom data.
+
+If no `EEPromDataBuffer` has been setup it will simply return false.
+
+
+
+###### void setEEPromDataBuffer(/*const*/ char* eepromDataBuffer, uint8_t eepromBufferSize);
+
+Set the EEProm Data Area to be used for the Return of EEProm data from Nextion by the fn `bool getEEPromData(uint32_t start, uint32_t len)` described above.
+
+
+```
+Usage:   setEEPromDataBuffer( eepromDataBuffer, sizeof(eepromDataBuffer));
+```
+
+
+
+
+
+Commands which require specific settings on Nextion.
+
+#### Time/Date Functions
 
 ###### void setTime(uint32_t time);
 
@@ -803,6 +904,98 @@ All that is needed now is to align the hour, timeSep and minute on the screen.
 
 
 
+###### void SetDate(uint32_t date)
+
+Sets the date on the Nextion.
+
+The time is sent as HEX YYMMDD in the variable "page0.SetDate=YYMMDD0xFF0xFF0xFF"
+
+When the Nextion sees that SetDate is not zero it sets the Nextion date.
+
+The SetDate variable is then set to 0.
+
+
+Usage:
+
+```
+uint32_t date = (Year-2000) * 0x10000 + Month * 0x100 + Day
+display.setDate(date)
+void setDate(uint32_t date);
+```
+
+
+
+Like the `SetTime` function, above, it requires the following Nextion code inserted into the timer function code.
+
+```
+//Nextion CODE
+/=================================
+//Set RTC date if SetDateVar >0
+//=================================
+//rtc0=year 2000 to 2099
+//rtc1=month 1 to 12
+//rtc2=day 1 to 31
+if(SetDate!=0)
+{
+  xx=SetDate
+  xx=xx>>16
+  xx+=2000
+  rtc0=xx
+  xx=SetDate
+  xx=xx&0xFF00
+  xx=xx>>8
+  rtc1=xx
+  xx=SetDate&0xFF
+  rtc2=xx
+  SetDate=0
+}
+```
+
+
+
+###### bool getDateTime();
+
+Gets the Date/Time set in the Nextion.
+
+The packed date/time is placed in the global variable packedDateTime.
+
+It can be decoded as shown below:
+
+*		dow    =   packedDateTime >> 29;  // (sun=0)
+*		dst	   = ( packedDateTime >> 28 ) & 0x01;	(known as BST in the UK)
+*		year   = ( packedDateTime >> 21 ) & 0x7F + 2000;
+*		month  = ( packedDateTime >> 17 ) & 0x0F;
+*		day    = ( packedDateTime >> 12 ) & 0x1F;
+*		hour   = ( packedDateTime >>  6 ) & 0x1F;
+*		minute = ( packedDateTime )       & 0x3F;
+
+NOTE: This fn should only be called when the page holding the hotspot `SndDateTime` is displayed. On the new example HMI file it is on `page 0`.
+
+The Nextion Code for the `SndDateTime` **HotSpot** is shown below:
+
+Note that the variables `dt=0,y=0,mo=0,d=0,h=0,m=0,dow=0,bst=0,n=0` MUST be placed in **Program.s**.
+
+```
+y=rtc0
+y-=2000
+mo=rtc1
+d=rtc2
+h=rtc3
+m=rtc4
+dow=rtc6
+n=bst
+dow=dow<<29
+n=n<<28
+y=y<<21
+mo=mo<<17
+d=d<<12
+h=h<<6
+dt=dow+n+y+mo+d+h+m
+get dt
+```
+
+
+
 ###### bool setDaylightSavingOn(bool on);
 
 Turn Nextion daylight saving variable on or off
@@ -820,6 +1013,16 @@ The observant of you will have noticed the use of a Nextion variable bst which w
 This variable serves to add 1 hour to the time if bst is == 1. In the UK daylight saving is BST - British Summer Time.
 
 This function just serves to set bst to 0 or 1 as appropriate.
+
+
+
+###### void setMcuDateTimeCallback(setMcuDateTimeCallbackFunc func);
+
+This function `setMcuDateTimeCallback(setMcuDateTimeCallbackFunc func)` - passes to Nextion the call back fn to **Set** the **MCU** date and time. 
+
+It also sets `autoUpdateDateTime` to true.
+
+This `setMcuDateTimeCallbackFunc` is called when Nextion reports a change in set date/time, perhaps when the operator updates/changes the date time on the Nextion display.
 
 
 
@@ -1371,6 +1574,71 @@ Usage:
 Also sets up software for bkcmd=1 or 3 situations.
 
 
+
+###### void setSystemResetCallback(systemResetCallbackFunc func)
+
+Registers the call back fn to carry out a System Reset.
+
+I use the buttonPress code below to send 0x0900 to the MCU. The library decodes this and calls the SystemResetCallBackFunction.
+
+```
+//Nextion Reset Button Code
+//in Touch Press Event
+swResult=0x0900
+get swResult
+```
+
+Using this code/feature the whole system can be reset.
+
+
+
+###### void setButtonPressCallback(buttonPressCallbackFunc func);
+
+This function passes to Nextion the call back fn to be called when a button press event occurs.
+
+The Nextion Button Code is:-
+
+```
+//Nextion Code
+//Button Touch Release Event
+swResult=0x0901
+get swResult
+```
+
+The 0x09 indicates a button press, the lowest 8 bits indicate which button was pressed.
+
+A `ButtonPressed` code is as below
+
+```
+void ButtonPressed(uint32_t which) {
+
+	Serial.print("Button #"); Serial.print(which); Serial.println(" pressed.");
+
+}
+```
+
+
+
+###### bool click(const char* objectToClick, bool touch);
+
+###### bool click(uint8_t page, const char* objectToClick, bool touch);
+
+Two functions to click a Nextion Feature (say a HotSpot).
+
+The first assumes that the Nextion is on the page where the item to be clicked is located, the second version will actually change to the page given before execuring the click function.
+
+*  Usage: `click("MyFavouriteHotspot", true )` sends `click MyFavouriteHotSpot,1`
+
+  to cause a `Touch Press Event`, passing false would cause a `Touch Release Event`.
+
+* Or: click(4, "MyFavouriteHotspot", true ) sends:-
+
+  ```
+  page(4)
+  click MyFavouriteHotSpot,1
+  ```
+
+  
 
 ### Nextion Controlling hardware
 
