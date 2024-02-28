@@ -812,7 +812,8 @@ bool Nextion2::respondToReply() {   //returns true if something needs responding
 						needsResponse = false;
 					}
 					break;
-				case 0x0901:
+				case 0x0901 ... 0x0910:
+/*
 				case 0x0902:
 				case 0x0903:
 				case 0x0904:
@@ -828,6 +829,7 @@ bool Nextion2::respondToReply() {   //returns true if something needs responding
 				case 0x090E:
 				case 0x090F:
 				case 0x0910:
+				*/
 					uint32_t idx;
 					idx = zz % 0x0900;
 					if (buttonCallBackSet) {
