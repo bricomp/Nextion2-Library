@@ -1,6 +1,6 @@
 # Nextion2-Library
 
-**NOTE This Release is an update from vs 1.72 in Nextion.h rather than this release in Nextion2.h.**
+**NOTE This Release is an update from vs 1.72 in to this release in Nextion2.h.**
 
 Other enhancements have been made to the library, described in the Nextion2.h file.
 
@@ -108,7 +108,7 @@ A suitable startup for your program could be as below:-
 	#define NextionDisplay Serial5
 	
 	elapsedMillis	nextionTime;
-	Nextion		display(&NextionDisplay);
+	Nextion2		display(&NextionDisplay);
 	nextionBaudRate = 9600;
 	
 	void setTeensyBaud(uint32_t baud) {
@@ -202,130 +202,157 @@ In your code added to "respondToReply", if you have handled the Nextion response
 
 Below is the listing for *respondToReply*.
 
-	bool Nextion::respondToReply() {   //returns true if something needs responding to
+	bool Nextion2::respondToReply() {   //returns true if something needs responding to
+		bool     needsResponse = true;
+		uint16_t zz;
+		uint32_t valve;
+		bool	 how;
 	
-	  bool     needsResponse = true;
-	  uint16_t zz;
-	  uint32_t valve;
-	  bool	 how;
-	  
-	  switch (nextionEvent.id) {
-		case invalidInstruction:	// Returned when instruction sent by user has failed
-		case instructionSuccess:	// (ONLY SENT WHEN bkcmd = 1 or 3 )
-			comdExecOk = true;
-		case invalidComponentId:	// Returned when invalid Component ID or name was used
-		case invalidPageId:			// Returned when invalid Page ID or name was used
-		case invalidPictureId:		// Returned when invalid Picture ID was used
-		case invalidFontId:			// Returned when invalid Font ID was used
-		case invalidFileOperation:	// Returned when File operation fails
-		case invalidCrc:			// Returned when Instructions with CRC validation fails
-	    							// their CRC check
-		case invalidBaudRateSetting:// Returned when invalid Baud rate was used
-		case invalidWaveformIdChan:	// Returned when invalid Waveform ID or 
-									// Channel # was used
-		case invalidVarNameAttrib:	// Returned when invalid Variable name or invalid
-	    							// attribute was used
-		case invalidVarOperation:	// Returned when Operation of Variable is invalid.ie: 
-									// Text assignment t0.txt = abc or t0.txt = 23, 
-		case assignmentFailed:		// Returned when attribute assignment failed to assign
-		case EEPROMOperationFailed:	// Returned when an EEPROM Operation has failed
-		case invalidQtyParams:		// Returned when the number of instruction parameters 
-									// is invalid
-		case ioOperationFailed:		// Returned when an IO operation has failed
-		case invalidEscapeChar:		// Returned when an unsupported escape character is used
-		case variableNameToLong:	// Returned when variable name is too long.Max length is
-	    							// 29 characters: 14 for page + “.” + 14 for component.
-		case serialBufferOverflow:	// Returned when a Serial Buffer overflow occurs
-	    							// Buffer will continue to receive the current 
-	    							// instruction, all previous instructions are lost.
-			if (nextionEvent.id != instructionSuccess) {
-				nextionError = true;
-				errorCode	 = nextionEvent.id;
-			}
-			break;
-		case touchEvent:
-	    //		Serial.println("Touch Event");
-			break;
-		case currentPageNumber:
-		//		Serial.println("Current Page Number");
-			break;
-		case touchCoordinateAwake:
-		//		Serial.println("Touch Coordinate Awake");
-			break;
-		case touchCoordinateSleep:
-		//		Serial.println("Touch Coordinate Sleep");
-			break;
-		case stringDataEnclosed:
-		//		Serial.println("String Data Enclosed");
-			if (!GetNextionString()) {
-				nextionError = true;
-				errorCode    = invalidNumCharsReturned;
-			};
-			break;
-		case numericDataEnclosed:
-			zz = nextionEvent.reply7.num[0];  // (uint16_t)nextionEvent.reply7.ans[0] * 256 +
-	        								  // (uint16_t)nextionEvent.reply7.ans[1];
-			switch (zz) {
-				case 0x0000: //Switch/Valve 0 off
-				case 0x0001: //Switch/Valve 0 on
-				case 0x0100: //Switch/Valve 1 off
-				case 0x0101: //Switch/Valve 1 on
-				case 0x0200: //Switch/Valve 2 off
-				case 0x0201: //Switch/Valve 2 on
-				case 0x0300: //Switch/Valve 3 off
-				case 0x0301: //Switch/Valve 3 on
-				case 0x0400: //Switch/Valve 4 off
-				case 0x0401: //Switch/Valve 4 on
-				case 0x0500: //Turn Boiler Off
-				case 0x0501: //Turn Boiler On
-				case 0x0600: //Turn Hot Water Off
-				case 0x0601: //Turn Hot Water On
-					valve = zz / 0x100;
-					how = ((zz % 0x100) == 1);
-					turnValveOnOrOff(valve, how);
-					needsResponse = false;
-					break;
-				case 0xFA00: //Nextion Set baudrate back to 9600
-					SetTeensyBaud(9600);
-					if (nextionAutoBaud){
+		switch (nextionEvent.id) {
+			case invalidInstruction:	// Returned when instruction sent by user has failed
+			case instructionSuccess:	// (ONLY SENT WHEN bkcmd = 1 or 3 )
+				comdExecOk = true;
+			case invalidComponentId:	// Returned when invalid Component ID or name was used
+			case invalidPageId:			// Returned when invalid Page ID or name was used
+			case invalidPictureId:		// Returned when invalid Picture ID was used
+			case invalidFontId:			// Returned when invalid Font ID was used
+			case invalidFileOperation:	// Returned when File operation fails
+			case invalidCrc:			// Returned when Instructions with CRC validation fails their CRC check
+			case invalidBaudRateSetting:// Returned when invalid Baud rate was used
+			case invalidWaveformIdChan:	// Returned when invalid Waveform ID or Channel # was used
+			case invalidVarNameAttrib:	// Returned when invalid Variable name or invalid attribute was used
+			case invalidVarOperation:	// Returned when Operation of Variable is invalid.
+										//     ie: Text assignment t0.txt = abc or t0.txt = 23, 
+			case assignmentFailed:		// Returned when attribute assignment failed to assign
+			case EEPROMOperationFailed:	// Returned when an EEPROM Operation has failed
+			case invalidQtyParams:		// Returned when the number of instruction parameters is invalid
+			case ioOperationFailed:		// Returned when an IO operation has failed
+			case invalidEscapeChar:		// Returned when an unsupported escape character is used
+			case variableNameTooLong:	// Returned when variable name is too long.
+										// Max length is 29 characters: 14 for page + “.” + 14 for component.
+			case serialBufferOverflow:	// Returned when a Serial Buffer overflow occurs Buffer will
+										// continue to receive the current instruction, all previous
+										// instructions are lost.
+				if (nextionEvent.id != instructionSuccess) {
+					nextionError = true;
+					errorCode	 = nextionEvent.id;
+				}
+				break;
+			case touchEvent:
+			//		Serial.println("Touch Event");
+				break;
+			case currentPageNumber:
+			//		Serial.println("Current Page Number");
+				break;
+			case touchCoordinateAwake:
+	/*			Serial.println("Touch Coordinate Awake");
+				Serial.print(nextionEvent.reply8.xPos);
+				Serial.print(" - ");
+				Serial.print(nextionEvent.reply8.yPos);
+				Serial.print(" - Press(1)/Release(0) : ");
+				Serial.println(nextionEvent.reply8.pressed);
+	*/			break;
+			case touchCoordinateSleep:
+			//		Serial.println("Touch Coordinate Sleep");
+				break;
+			case stringDataEnclosed:
+			//		Serial.println("String Data Enclosed");
+				if (!GetNextionString()) {
+					nextionError = true;
+					errorCode    = invalidNumCharsReturned;
+				};
+				break;
+			case numericDataEnclosed:
+	
+				zz = nextionEvent.reply7.num[0];  // (uint16_t)nextionEvent.reply7.ans[0] * 256 +
+				switch (zz) {					  				// (uint16_t)nextionEvent.reply7.ans[1];
+					case 0x0000: //Switch/Valve 0 off
+					case 0x0001: //Switch/Valve 0 on
+					case 0x0100: //Switch/Valve 1 off"
+					case 0x0101: //Switch/Valve 1 on
+					case 0x0200: //Switch/Valve 2 off
+					case 0x0201: //Switch/Valve 2 on
+					case 0x0300: //Switch/Valve 3 off
+					case 0x0301: //Switch/Valve 3 on
+					case 0x0400: //Switch/Valve 4 off
+					case 0x0401: //Switch/Valve 4 on
+					case 0x0500: //Turn Boiler Off
+					case 0x0501: //Turn Boiler On
+					case 0x0600: //Turn Hot Water Off
+					case 0x0601: //Turn Hot Water On
+						valve = zz / 0x100;
+						how = ((zz % 0x100) == 1);
+						turnValveOnOrOff(valve, how);
 						needsResponse = false;
-					}
-					break;
-				case 0xFDFD: // Indicates Nextion Serial Buffer Clear
-					serialBufferClear	= true;
-					needsResponse		= false;
-					break;
-				default:
-					Serial.print("Some other NumericDataEnclosed data|: ");
-					Serial.print(nextionEvent.reply7.num[0], HEX); Serial.print(" ");
-					Serial.print(nextionEvent.reply7.num[1], HEX); Serial.println();
-					break;
-			}
-			break;
-		case autoEnteredSleepMode:
-		//		Serial.println("Auto Entered Sleep Mode");
-			break;
-		case autoAwakeFromSleepMode:
-		//		Serial.println("Auto awake mode");
-			break;
-		case nextionReady:
-		//		Serial.println("Nextion Ready");
-			break;
-		case powerOnMicroSDCardDet:
-			break;
-		case transparentDataFin:
-		//		Serial.println("Transparent data finished");
-			break;
-		case transparentDataReady:
-		//		Serial.println("Transparent data ready");
-			break;
-		default:
-			Serial.print("How did I get here:"); Serial.println(nextionEvent.id, HEX);
-			_s->flush();
-			clearBuffer();
-			break;
-	   }
-	   return needsResponse;
+						break;
+					case 0x0701: // Update to Hot Water Data;
+						eepromDataChanged = true;
+						needsResponse	  = false;
+						break;
+					case 0x0801: // Nextion Date/Time updated
+						nextionDateTimeUpdt = true;
+						if (getReply(getNumVarTimeout)) {
+							packedDateTime = nextionEvent.reply7.number32bit;
+							if (autoUpdateMcuDateTime) setMcuDateTime();
+							needsResponse  = false;
+						}
+						break;
+					case 0x0900: // System Reset
+						if (systemResetCallBackSet) {
+							SystemReset();
+							needsResponse = false;
+						}
+						break;
+					case 0x0901 ... 0x0910:
+						uint32_t idx;
+						idx = zz % 0x0900;
+						if (buttonCallBackSet) {
+							ButtonPress(idx);
+							needsResponse = false;
+						}
+						break;
+					case 0xFA00: //Nextion Set baudrate back to 9600
+						SetTeensyBaud(9600);
+						if (nextionAutoBaud) {
+							needsResponse = false;
+						}
+						break;
+					case 0xFDFD: // Indicates Nextion Serial Buffer Clear
+						serialBufferClear	= true;
+						needsResponse		= false;
+						break;
+					default:
+						Serial.print("Some other NumericDataEnclosed data: ");
+						Serial.print(nextionEvent.reply7.num[0], HEX); Serial.print(" ");
+						Serial.print(nextionEvent.reply7.num[1], HEX); Serial.println();
+						break;
+				}
+				break;
+	
+			case autoEnteredSleepMode:
+			//		Serial.println("Auto Entered Sleep Mode");
+				break;
+			case autoAwakeFromSleepMode:
+			//		Serial.println("Auto awake mode");
+				break;
+			case nextionReady:
+			//		Serial.println("Nextion Ready");
+				break;
+			case powerOnMicroSDCardDet:
+				break;
+			case transparentDataFin:
+			//		Serial.println("Transparent data finished");
+				break;
+			case transparentDataReady:
+			//		Serial.println("Transparent data ready");
+				break;
+			default:
+				Serial.print("How did I get here:"); Serial.println(nextionEvent.id, HEX);
+				_s->flush();
+				clearBuffer();
+				break;
+		}
+		return needsResponse;
 	}
 
 The first 19 responses, except for *`instructionSuccess`* are errors. Their value is placed in the variable `display.errorCode` and the variable `display.nextionError` is set to *true*. Note that `display.nextionError` is set to false when using `display.getReply()` and valid data is returned.
@@ -371,11 +398,11 @@ It should be noted that the main loop should look something like below:-
 
 #### Nextion Return Format
 
-When the Nextion sends data to the Teensy or any other MCU it first sends an identification character followed by a number of characters, dependant upon the type of data being returned. This is decoded by `display.respondToReply`. These id's and their response is listed in the 2 file and also in .\Resources\Nextion2.h\A4 Landscape.pdf or .docx. The latter two documents are provided so that they can be printed out for viewing purposes.
+When the Nextion sends data to the Teensy or any other MCU it first sends an identification character followed by a number of characters, dependant upon the type of data being returned. This is decoded by `display.respondToReply`. These id's and their response is listed in the Nextion2.h.txt file and also in .\Resources\Nextion2.h\A4 Landscape.pdf or .docx. The latter two documents are provided so that they can be printed out for viewing purposes.
 
-If you scroll down to the 5th page you will see listed all the Nextion return id values followed by the number of bytes/chars returned after the id, and an explanation of the format of the returned data.
+If you scroll down to the 9th page you will see listed all the Nextion return id values followed by the number of bytes/chars returned after the id, and an explanation of the format of the returned data.
 
-If we examine the `numericDataEnclosed` id we see that seven bytes/chars will be returned. Now looking at page 4 and the `nextionEventType` we see that it can be made up of a number of data types. In the case of the numeric data return we expect seven chars. This is handled by the `reply7Type` and `reply7intType`. The reply7IntType (bottom of Page 3) can be interpreted in 3 ways, as an array of 4 chars, as an array of 2 unsigned integers or as one 32 bit signed integer. The reply7Type also holds the Nextion returned 0xFF0xFF0xFF. If the reply7Type is used instead then it can be interpreted as an unsigned 32 bit integer instead of signed.
+If we examine the `numericDataEnclosed` id we see that seven bytes/chars will be returned. Now looking at page 6 and the `nextionEventType` we see that it can be made up of a number of data types. In the case of the numeric data return we expect seven chars. This is handled by the `reply7Type` and `reply7intType`. The reply7IntType (bottom of Page 5) can be interpreted in 3 ways, as an array of 4 chars, as an array of 2 unsigned integers or as one 32 bit signed integer. The reply7Type also holds the Nextion returned 0xFF0xFF0xFF. If the reply7Type is used instead then it can be interpreted as an unsigned 32 bit integer instead of signed.
 
 If you want to print out the first byte/char then use something like `Serial.print(display.nextionEvent.reply7.ans[0]);`or to print out the first 16bit uint use `Serial.print(display.nextionEvent.reply7.num[0]);`and to print out the data as 32bit integer use `Serial.print(display.eventType.reply7int.number32bitInt);`
 
@@ -429,7 +456,7 @@ min 0, max 3, default 2
 – Level 2 is OnFailure, only when last serial command failed (default)
 – Level 3 is Always, returns 0x00 to 0x23 result of serial command.
 
-Result is only sent after serial command/task has been completed, as such this provides an invaluable status for debugging and branching. See table on Page 6 of Nextion2.h.A4 Landscape.docx or .pdf.
+Result is only sent after serial command/task has been completed, as such this provides an invaluable status for debugging and branching. See table on Page 9 of Nextion2.h.A4 Landscape.docx or .pdf.
 
 Nextion Return Data is not subject to bkcmd, i.e. if a command normally returns data, the return of the data is the "handshake" function.
 
@@ -635,8 +662,6 @@ In all three cases the varName MUST exist. Examples of usage below:-
 	display.sendNumberAsText( num, false );
 	display.sendText( ".");
 ```
-
-
 
 
 
