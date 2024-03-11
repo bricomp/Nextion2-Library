@@ -472,9 +472,11 @@ Sets which as active displayed page.
 
 
 
-###### int32_t getPage();
+###### uint8_t getPage();				
 
-Gets the active displayed page.
+Gets the active displayed page.										Updated at vs 2.01 was :- int32_t getPage();
+
+Returns 255 if unable to do so.
 
 
 
