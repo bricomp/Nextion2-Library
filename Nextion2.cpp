@@ -1166,8 +1166,22 @@ bool Nextion2::getEEPromData(uint32_t start, uint8_t len) {
 	return  (eepromBytesRead == len);
 }
 
-int32_t Nextion2::getPage() {
-	return getVariableValue("dp");
+uint8_t Nextion2::getPage() {
+
+	rep4Type val;
+
+	val.pageNum = 255;  // An error Condition
+
+	_s->print("sendme\xFF\xFF\xFF");
+	if (getReply(getNumVarTimeout)) {
+		val = nextionEvent.reply4;
+	} else
+	{
+		nextionError = true;
+		errorCode	 = errorReadingPageNumber;
+	}
+
+	return val.pageNum;
 }
 
 #define debugt3z
