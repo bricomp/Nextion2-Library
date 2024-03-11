@@ -988,6 +988,7 @@ bool Nextion2::getDateTime() {
 	else
 	{
 		Serial.println("Wrong Page");
+		Serial.println(getPage());
 	}
 	return false;
 #ifdef bkcmd1or3allowed
@@ -1050,7 +1051,15 @@ int32_t Nextion2::getVariableValue(const char* varName, varAttributeEnum attribu
 	t = 0;
 #endif
 
-	_s->print("get "); _s->print(varName); _s->print("."); _s->print(attributeTxt[attributeId]); _s->print("\xFF\xFF\xFF");
+	_s->print("get "); _s->print(varName);   //	 WAS (changed at 2.01) _s->print("get "); _s->print(varName); _s->print("."); _s->print(attributeTxt[attributeId]); _s->print("\xFF\xFF\xFF");
+
+	if (attributeId != sysVar) {
+		_s->print(".");
+		_s->print(attributeTxt[attributeId]);
+	}
+	_s->print("\xFF\xFF\xFF");
+
+
 	if (getReply(getNumVarTimeout)) {
 		val = nextionEvent.reply7int;
 	}

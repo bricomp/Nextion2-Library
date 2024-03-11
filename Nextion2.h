@@ -123,6 +123,7 @@ Revision		    Date		Author			Description
 (***********************************************************************************************************************************)
   2.00	27/02/2024  Robert E Bridges	- New version with some simplification and expansion of usefulness
 										- Renamed as Nextion2.h
+  2.01  11/03/2024  Robert E Bridges	- Error corrected..when sending global variables (without suffix) "." was still sent.
 
 (***********************************************************************************************************************************)
 (*	   									Changes at vs 2.00 and update suggestions from vs 1.72									   *)
