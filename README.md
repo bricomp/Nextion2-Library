@@ -1284,7 +1284,7 @@ if(linesOccupied<201)//220-19
 <u>...now the m0 Touch Release Event Code</u>
 
 ```
-![page1attribs](C:\Arduino Programs\LIBRARIES\Nextion\Resources\page1attribs.jpg)yOffset=0
+yOffset=0
 if(linesOccupied<topScrlTxtLn)
 {
   p[1].b[topScrlTxtLn-linesOccupied].txt=page1.va0.txt//19=t18 id
