@@ -462,25 +462,48 @@ void Nextion2::clearBuffer() {
 		}
 	}
 }
-#define debugcz
+
+#define debugc
 
 bool Nextion2::commsOk() {
-	bool ok = false;
 
-	clearBuffer();
-	nextionEvent.id = 0;
+	elapsedMillis startTime;
+	uint8_t		  inBuff[5];
+
+	_s->flush();		// Clear outgoing Serial Buffer
+	clearBuffer();		// clear incoming serial stream
+
 	_s->print("sendme\xFF\xFF\xFF");
-	_s->flush();
-	delay(20); // was delay(10); vs 1.73
+	_s->flush();		// wait for all chars to be sent
+
+	startTime = 0;
+	while ((_s->available() < 5) and (startTime < 2000)) {
+		delay(1);
+	}
 #ifdef debugc
-//	delay(10);
-//	Serial.print("in commsOk ");
+	Serial.print("commsOk: Time to 5 char count: "); Serial.println(startTime);
 #endif
-	ok = getReply();
+	inBuff[0] = 0x00;
+
+	if (_s->available() >= 5) {
+		inBuff[0] = _s->read();
+		inBuff[1] = _s->read();
+		inBuff[2] = _s->read();
+		inBuff[3] = _s->read();
+		inBuff[4] = _s->read();
 #ifdef debugc
-	if (ok) Serial.println("OK"); else Serial.println("Doh");
+		Serial.print("commsOk: inBuff data: "); 
+		Serial.print(inBuff[0], HEX); Serial.print(" ");
+		Serial.print(inBuff[1], HEX); Serial.print(" ");
+		Serial.print(inBuff[2], HEX); Serial.print(" ");
+		Serial.print(inBuff[3], HEX); Serial.print(" ");
+		Serial.println(inBuff[4], HEX);
 #endif
-	return ok;
+	}else
+	{
+		return false;
+	}
+	return ((inBuff[0] == 0x66) and (inBuff[2] == 0xFF) and (inBuff[3] == 0xFF) and (inBuff[4] == 0xFF));
 }
 
 #define debugrz
@@ -1163,7 +1186,7 @@ bool Nextion2::getEEPromData(uint32_t start, uint8_t len) {
 		}
 	}
 	if (eepromBytesRead == len) eepromDataChanged = false;
-	return  (eepromBytesRead == len);
+ 	return  (eepromBytesRead == len);
 }
 
 uint8_t Nextion2::getPage() {
