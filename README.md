@@ -1394,6 +1394,10 @@ if(linesOccupied>topScrlTxtLn)
 
 So with all the above Text Screen information you can have a Text Terminal on your Nextion complete with the ability to scroll back through 200 lines of previous text (actually 182 lines).
 
+**NOTE: My initial design had only two pages, page0 and page1. If you wish to add other pages and still be able to write to the "Terminal Screen" on page 1, each additional page must have a m0 HotSpot with the same code as that for the current m0 HotSpots used on page0 and page1. Each new page MUST also have a text variable called tmp with the same parameters as already used on page0 and page1.**
+
+
+
 ###### Leds - Flashing, On and Off
 
 On my page0 screen I have 24 simulated leds in three rows of 8 leds.
