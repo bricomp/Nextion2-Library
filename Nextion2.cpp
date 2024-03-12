@@ -464,20 +464,40 @@ void Nextion2::clearBuffer() {
 }
 
 #define debugcz
+#define useVer1
 
 bool Nextion2::commsOk() {
+#ifdef useVer1		// Problems with ver2
+	bool ok = false;
 
+	clearBuffer();
+	nextionEvent.id = 0;
+	_s->print("sendme\xFF\xFF\xFF");
+	_s->flush();
+	delay(20); // was delay(10); vs 1.73
+#ifdef debugc
+	//	delay(10);
+	//	Serial.print("in commsOk ");
+#endif
+	ok = getReply();
+#ifdef debugc
+	if (ok) Serial.println("OK"); else Serial.println("Doh");
+#endif
+	return ok;
+#else		// ver2 currently not working
 	elapsedMillis startTime;
 	uint8_t		  inBuff[5];
 
 	_s->flush();		// Clear outgoing Serial Buffer
 	clearBuffer();		// clear incoming serial stream
 
+	delay(20);
+
 	_s->print("sendme\xFF\xFF\xFF");
 	_s->flush();		// wait for all chars to be sent
 
 	startTime = 0;
-	while ((_s->available() < 5) and (startTime < 2000)) {
+	while ((_s->available() < 5) and (startTime < 100)) {
 		delay(1);
 	}
 #ifdef debugc
@@ -504,6 +524,7 @@ bool Nextion2::commsOk() {
 		return false;
 	}
 	return ((inBuff[0] == 0x66) and (inBuff[2] == 0xFF) and (inBuff[3] == 0xFF) and (inBuff[4] == 0xFF));
+#endif
 }
 
 #define debugrz
@@ -1282,18 +1303,29 @@ bool Nextion2::setVariableValue(const char* varName, int32_t var) {
 	return setVariableValue(varName, setSysVar, var);
 };
 
+#define debugSvv3z
+
 bool Nextion2::setVariableValue(const char* varName, const char* var, bool terminateText) {
 
 	bool ok = true;
 
 	if (stringInProgress) {
+#ifdef debugSvv3
+		Serial.print("StringInProgress: "); Serial.println("\"\xFF\xFF\xFF");
+#endif
 		_s->print("\"\xFF\xFF\xFF");	// Finish off string command in progress
 		stringInProgress = false;
 		ok = !getReply(100);
 	}
 	if (ok) {
-		_s->print(varName); _s->print(".txt="); _s->print(var);
+#ifdef debugSvv3
+		Serial.print(varName); Serial.print(".txt=\""); Serial.print(var);
+#endif
+		_s->print(varName); _s->print(".txt=\""); _s->print(var);
 		if (terminateText) {
+#ifdef debugSvv3
+			Serial.println("\"\xFF\xFF\xFF");
+#endif
 			_s->print("\"\xFF\xFF\xFF");	// Finish off string command in progress
 		}
 		else
