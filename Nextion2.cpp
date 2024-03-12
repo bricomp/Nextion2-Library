@@ -463,7 +463,7 @@ void Nextion2::clearBuffer() {
 	}
 }
 
-#define debugc
+#define debugcz
 
 bool Nextion2::commsOk() {
 
