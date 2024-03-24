@@ -2,6 +2,10 @@
 #define hardwareRTC
 #define usingSoftwareSerialz
 
+#ifndef TEENSYDUINO
+#include <elapsedMillis.h>
+#endif
+
 //#include "whichTeensy.h"
 #include "Arduino.h"
 #include <Stream.h>
@@ -35,7 +39,7 @@ RV3028  rtc;
 Nextion2 display(&NextionDisplay);
 
 elapsedMillis	nextionTime;
-bool const		open   = true;
+bool const		openValve   = true;
 bool const		closed = false;
 uint32_t		nextionBaudRate = 9600;
 
@@ -50,7 +54,9 @@ void changeTeensyBaud(uint32_t baud) {
 	delay(100);
 	NextionDisplay.begin(baud);
 
+#ifdef TEENSYDUINO
 	NextionDisplay.clear();
+#endif
 }
 
 /*****************************************************************************
@@ -99,7 +105,7 @@ void DisplayClock(bool displayIt) {
 void SetValveOnOrOff_FromNextion(uint32_t which, bool how) {
 	switch (which) {
 	case 0 ... 4:   // valves
-		if (how == open) {
+		if (how == openValve) {
 			Serial.print("Opening valve "); Serial.println(which);
 			// OpenControlValve((controlValveIdType)which, true);
 		}
