@@ -126,6 +126,8 @@ Revision		    Date		Author			Description
   2.01  11/03/2024  Robert E Bridges	- Error corrected..when sending global variables (without suffix) "." was still sent.
 										- getPage has been altered to return a uint8_t and uses "sendme" rather than "get dp". 
 										  This results in 3 fewer serial bytes being transmitted.
+  2.02  18/03/2024  Robert E Bridges	- SendCommand (text version) enhanced.
+  2.03  24/03/2024  Robert E Bridges	- Include elapsedMillis for non Teensy boards added.
 (***********************************************************************************************************************************)
 (*	   									Changes at vs 2.00 and update suggestions from vs 1.72									   *)
 (***********************************************************************************************************************************)
@@ -209,6 +211,7 @@ Revision		    Date		Author			Description
 		*/
 
 #include "Arduino.h"
+#include <elapsedMillis.h>
 
 #pragma pack(push,1)
 
@@ -522,8 +525,8 @@ class Nextion2 {
 		typedef void (*systemResetCallbackFunc) ();							// create function pointer type
 		typedef void (*buttonPressCallbackFunc) (uint32_t);					// create function pointer type
 
-		const char		revision[5]			= "2.01";
-		const uint16_t  revisionNum			= 201;
+		const char		revision[5]			= "2.03";
+		const uint16_t  revisionNum			= 203;
 
 		uint32_t		baudRate			= 9600;
 		const uint32_t	resetNextionBaud	= baudRate;
@@ -606,10 +609,15 @@ class Nextion2 {
 /****************************************************************************************************
 *		sendCommand(const char* command); - Sends command to Nextion.								*
 *		sendCommand(const char* command, uint32_t num); - Sends command & num to Nextion.			*
-*		sendCommand(const char* command, const char* txt, encloseText); -Sends command & txt		*
+*		sendCommand(const char* command,const char* txt,bool encloseText,bool terminateText = true);*
+*																			   -Sends command & txt *
 *---------------------------------------------------------------------------------------------------*
 *		In the 3rd form above, if encloseTxt is true then txt is enclosed between					*
 *		quotation marks ".																			*
+*		If terminateText is FALSE the terminating " and the terminating 0XFF0xFF0xFF will not be	*
+*		sent. This will allow the text string to have other numbers or text sent using the			*
+*		SendText or SendNumberAsText commands.														*
+*		The terminateText bool only has an effect if encloseText is true.							*
 *		So sendCommand( "page0.CommentBox.txt=","Hello There",true); results in						*
 *       page0.CommentBox.txt="Hello There"\xFF\xFF\xFF being sent to the Nextion.					*
 *---------------------------------------------------------------------------------------------------*
@@ -621,7 +629,7 @@ class Nextion2 {
 *****************************************************************************************************/
 		void sendCommand(const char* command);
 		void sendCommand(const char* command, uint32_t num);
-		void sendCommand(const char* command, const char* txt, bool encloseText);
+		void sendCommand(const char* command, const char* txt, bool encloseText, bool terminateText = true );
 /**/
 /****************************************************************************************************
 *		setBkCmdLevel(bkcmdStateType level) - Sets Nextion bkcmd value								*
@@ -818,8 +826,8 @@ class Nextion2 {
 *---------------------------------------------------------------------------------------------------*
 *		The varName MUST exist.                           											*
 *****************************************************************************************************/
-		int32_t getVariableValue(const char* varName);
 		int32_t getVariableValue(const char* varName, varAttributeEnum attributeId);
+		int32_t getVariableValue(const char* varName);
 /**/
 /****************************************************************************************************
 *		getNumVarFloat(const char* varName) - Gets the value of Nextion Float Variable.				*
@@ -879,6 +887,14 @@ class Nextion2 {
 *		If no EEPromDataBuffer has been setup it will simply return false.							*
 *****************************************************************************************************/
 		bool getEEPromData(uint32_t start, uint8_t len);
+/**/
+/****************************************************************************************************
+*		bool writeEEPromData(char* eepromWriteData, uint16_t start, uint8_t eepromDataSize);		*
+*---------------------------------------------------------------------------------------------------*
+*       USAGE:																						*
+*				writeEEPromData((char*) theData, eepromAddress, sizeof(theData)						*
+*****************************************************************************************************/
+		bool writeEEPromData(char* eepromWriteData, uint16_t start, uint8_t eepromDataSize);
 /**/
 /****************************************************************************************************
 *		setVariableValue(const char* varNamevar, setVarAttributeEnum attributeId, int32_t var )		*
@@ -1259,6 +1275,8 @@ class Nextion2 {
 		bool SendGlobalAddress(uint8_t p, uint8_t b);
 		bool GetNextionString();
 		void pntTextToNextion(bool embedTimeInTxt, const char* p, bool transmit);
+		void CheckStringInProgress();
+		bool CheckStringInProgressCheckReply();
 
 		// variable for the serial stream
 		Stream* _s;
