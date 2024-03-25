@@ -12,7 +12,7 @@
 
 #ifdef hardwareRTC
 // Load your RTC Library here
-#include <RTC_RV_3028_C7.h>     // https://github.com/constiko/RV-3028_C7-Arduino_Library
+#include <RV_3028_C7.h>     // https://github.com/constiko/RV-3028_C7-Arduino_Library
 #else
 #include <TimeLib.h>
 #endif
