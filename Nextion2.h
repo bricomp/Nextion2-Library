@@ -211,7 +211,9 @@ Revision		    Date		Author			Description
 		*/
 
 #include "Arduino.h"
+#ifndef TEENSYDUINO
 #include <elapsedMillis.h>
+#endif
 
 #pragma pack(push,1)
 

@@ -1066,14 +1066,29 @@ void Nextion2::setBackLight(uint32_t backLight) {
 #define debug2z
 #define dispTimeToGetNumz
 
+void Nextion2::CheckStringInProgress() {
+	if (stringInProgress) {
+		_s->print("\"\xFF\xFF\xFF");	// Finish off string command in progress
+		stringInProgress = false;
+	}
+}
+
+bool Nextion2::CheckStringInProgressCheckReply() {
+	if (!stringInProgress) {
+		return true;
+	} else
+	{
+		CheckStringInProgress();
+		return !getReply(100);
+	}
+}
+
 int32_t Nextion2::getVariableValue(const char* varName, varAttributeEnum attributeId) {
 
 	rep7IntType	  val;
 
-	if (stringInProgress ) {
-		_s->print("\"\xFF\xFF\xFF");	// Finish off string command in progress
-		stringInProgress = false;
-	}
+	CheckStringInProgress();
+
 	if (attributeId == txt) {
 		return getStringVarValue(varName);
 	}
@@ -1210,6 +1225,10 @@ bool Nextion2::getEEPromData(uint32_t start, uint8_t len) {
  	return  (eepromBytesRead == len);
 }
 
+bool Nextion2::writeEEPromData(char* eepromWriteData, uint16_t start, uint8_t eepromDataSize) {
+	return false;//not written yet
+};
+
 uint8_t Nextion2::getPage() {
 
 	rep4Type val;
@@ -1230,6 +1249,9 @@ uint8_t Nextion2::getPage() {
 
 #define debugt3z
 void Nextion2::sendCommand(const char* command) {
+
+	CheckStringInProgress();
+
 #ifdef debugt3
 	Serial.print(command); Serial.println("\xFF\xFF\xFF");
 #endif
@@ -1240,6 +1262,9 @@ void Nextion2::sendCommand(const char* command) {
 };
 #define debugt3z
 void Nextion2::sendCommand(const char* command, uint32_t num) {
+
+	CheckStringInProgress();
+
 #ifdef debugt3
 	Serial.print(command); Serial.print(num); Serial.println("\xFF\xFF\xFF");
 #endif
@@ -1253,15 +1278,31 @@ void Nextion2::gotoPage(uint32_t which) {
 	sendCommand("page ", which);
 }
 
-void Nextion2::sendCommand(const char* command, const char* txt, bool encloseText) {
-#ifdef debugt3
-	Serial.print(command); Serial.print(txt); Serial.println("\xFF\xFF\xFF");
+#define debugt4z
+void Nextion2::sendCommand(const char* command, const char* txt, bool encloseText, bool terminateText) {
+	bool termCommand;
+
+	CheckStringInProgress();
+
+	termCommand = !encloseText or (encloseText and terminateText);
+
+#ifdef debugt4
+	Serial.print(command); 
+	if (encloseText) Serial.print("\"");
+	Serial.print(txt);
+	if (termCommand) {
+		if (encloseText) Serial.print("\"");
+		Serial.print("\xFF\xFF\xFF");
+	}
 #endif
 	_s->print(command); 
 	if (encloseText) _s->print("\""); 
 	_s->print(txt);
-	if (encloseText) _s->print("\"");
-	_s->print("\xFF\xFF\xFF");
+	if (termCommand){
+		if (encloseText) _s->print("\"");
+		_s->print("\xFF\xFF\xFF");
+	} else stringInProgress = true;
+
 #ifdef bkcmd1or3allowed
 	checkedComdCompleteOk = !checkComdComplete;
 #endif
@@ -1274,15 +1315,16 @@ bool Nextion2::setVariableValue(const char* varName, setVarAttributeEnum setAttr
 	bool ok = true;
 
 #ifdef debug1
-	Serial.print(varName); Serial.print("="); Serial.print(var); Serial.println("\xFF\xFF\xFF");
+	Serial.print(varName); 
+	if (setAttributeId != setSysVar) {
+		Serial.print("."); Serial.print(attributeTxt[setAttributeId]);
+	}
+	Serial.print("="); Serial.print(var); Serial.println("\xFF\xFF\xFF");
 #endif
 	if (setAttributeId == setTxt) return false;
 
-	if (stringInProgress) {
-		_s->print("\"\xFF\xFF\xFF");	// Finish off string command in progress
-		stringInProgress = false;
-		ok = !getReply(100);
-	}
+	ok = CheckStringInProgressCheckReply();
+
 	if (ok) {
 
 		_s->print(varName);
@@ -1383,7 +1425,7 @@ bool Nextion2::setGlobalVariableValue(uint8_t p, uint8_t b, setVarAttributeEnum 
 	bool ok = false;
 
 #ifdef debug1
-	Serial.print(varName); Serial.print("="); Serial.print(var); Serial.println("\xFF\xFF\xFF");
+//	Serial.print(varName); Serial.print("="); Serial.print(var); Serial.println("\xFF\xFF\xFF");
 #endif
 	if ( SendGlobalAddress(p, b) ) {
 		_s->print(attributeTxt[setAttributeId]); _s->print("="); _s->print(var); _s->print("\xFF\xFF\xFF");
@@ -1398,7 +1440,7 @@ bool Nextion2::setGlobalVariableValue(uint8_t p, uint8_t b, setVarAttributeEnum 
 
 bool Nextion2::setGlobalVariableValue(uint8_t p, uint8_t b, int32_t var) {
 #ifdef debug1
-	Serial.print(varName); Serial.print("="); Serial.print(var); Serial.println("\xFF\xFF\xFF");
+//	Serial.print(varName); Serial.print("="); Serial.print(var); Serial.println("\xFF\xFF\xFF");
 #endif
 	return setGlobalVariableValue(p, b, setVal, var);
 };
@@ -1408,7 +1450,7 @@ bool Nextion2::setGlobalVariableValue(uint8_t p, uint8_t b, const char* var, boo
 	bool ok = false;
 
 #ifdef debug1
-	Serial.print(varName); Serial.print("="); Serial.print(var); Serial.println("\xFF\xFF\xFF");
+//	Serial.print(varName); Serial.print("="); Serial.print(var); Serial.println("\xFF\xFF\xFF");
 #endif
 	if (SendGlobalAddress(p, b)) {
 		_s->print("txt=\""); _s->print(var); 
