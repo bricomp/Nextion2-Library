@@ -274,26 +274,26 @@ void setup() {
 
 	DisplayInBox(95, 130, "               Above there are Switches                                  to Turn Valves On/Off.                            Turning them on/off one by one.", 3000,3000);
 
-	display.turnNextionValve(0, open);
+	display.turnNextionValve(0, openValve);
 	delay(2000);	display.printAnyReturnCharacters(nextionTime,2);
 	display.turnNextionValve(0, closed);
 	delay(2000);	display.printAnyReturnCharacters(nextionTime,3);
-	display.turnNextionValve(1, open);
+	display.turnNextionValve(1, openValve);
 	delay(2000);	display.printAnyReturnCharacters(nextionTime,4);
 	display.turnNextionValve(1, closed);
 	delay(2000);	display.printAnyReturnCharacters(nextionTime,5);
 //	Serial.println("Changing Baud Rate to 115200");
 //	display.SetBaudRate(115200);
 	delay(200);
-	display.turnNextionValve(2, open);
+	display.turnNextionValve(2, openValve);
 	delay(2000);	display.printAnyReturnCharacters(nextionTime,6);
 	display.turnNextionValve(2, closed);
 	delay(2000);	display.printAnyReturnCharacters(nextionTime,7);
-	display.turnNextionValve(3, open);
+	display.turnNextionValve(3, openValve);
 	delay(2000);	display.printAnyReturnCharacters(nextionTime,8);
 	display.turnNextionValve(3, closed);
 	delay(2000);	display.printAnyReturnCharacters(nextionTime,9);
-	display.turnNextionValve(4, open);
+	display.turnNextionValve(4, openValve);
 	delay(2000);
 	display.turnNextionValve(4, closed);
 	delay(2000);	display.printAnyReturnCharacters(nextionTime,10);
